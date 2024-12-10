@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use serde_json::Value;
-use crate::{error::XResult, Native};
+use crate::{error::XResult, Native, config::BucketSource, cloud_client::UploadOpts};
 use super::{Strategy, UrlRes};
 
 pub struct Tos {
@@ -27,10 +27,10 @@ impl Strategy for Tos {
         self.native = Some(native);
     }
 
-    fn storage_key(&self, bucket: &Value) -> String {
+    fn storage_key(&self, bucket_source: &BucketSource) -> String {
         format!("sts:{}:{}", 
-            bucket["cloudName"].as_str().unwrap_or(""),
-            bucket["name"].as_str().unwrap_or("")
+            bucket_source.cloud_name.as_deref().unwrap_or(""),
+            bucket_source.name
         )
     }
 
@@ -39,24 +39,26 @@ impl Strategy for Tos {
         serde_json::json!({})
     }
 
-    async fn get_sts(&self, bucket: &Value, opts: &Value) -> XResult<Value> {
+    async fn get_sts(&self, bucket_source: &BucketSource, opts: &UploadOpts<'_>) -> XResult<Value> {
         if let Some(native) = &self.native {
-            let cache = native.get_storage(&self.storage_key(bucket));
+            let storage_key = format!("sts:{}:{}", 
+                bucket_source.cloud_name.as_deref().unwrap_or(""),
+                bucket_source.name);
+                
+            let cache = native.get_storage(&storage_key);
             if let Some(cache) = cache {
                 return Ok(cache);
             }
 
-            let bucket_key = bucket["domain"].as_str()
-                .unwrap_or("")
-                .split('.')
-                .next()
+            let bucket_key = bucket_source.domain.as_ref()
+                .map(|domain| domain.split('.').next().unwrap_or(""))
                 .unwrap_or("");
 
             let res = native.request(crate::RequestArgs {
                 method: "GET".to_string(),
                 url: format!("/api/cloud/sts?cloud={}&cloudName={}&bucket={}", 
-                    bucket["cloud"].as_str().unwrap_or(""),
-                    bucket["cloudName"].as_str().unwrap_or(""),
+                    bucket_source.cloud.as_deref().unwrap_or(""),
+                    bucket_source.cloud_name.as_deref().unwrap_or(""),
                     bucket_key
                 ),
                 enable_cache: false,
@@ -65,7 +67,7 @@ impl Strategy for Tos {
             }).await?;
 
             if let Some(expire_at) = res["expireAt"].as_i64() {
-                native.set_storage(&self.storage_key(bucket), res.clone());
+                native.set_storage(&storage_key, res.clone());
             }
 
             Ok(res)
@@ -74,12 +76,12 @@ impl Strategy for Tos {
         }
     }
 
-    async fn upload(&self, bucket: &Value, sts: Value, opts: &Value) -> XResult<UrlRes> {
-        let base_url = format!("https://{}", bucket["domain"].as_str().unwrap_or(""));
+    async fn upload(&self, bucket_source: &BucketSource, sts: Value, opts: &UploadOpts<'_>) -> XResult<UrlRes> {
+        let base_url = format!("https://{}", bucket_source.domain.as_deref().unwrap_or(""));
         
         if let Some(native) = &self.native {
             let mut form_data = serde_json::json!({
-                "key": opts["key"],
+                "key": opts.key,
             });
 
             if let Some(merge_data) = sts["mergeFormData"].as_object() {
@@ -93,17 +95,17 @@ impl Strategy for Tos {
             native.upload_file(crate::UploadArgs {
                 url: base_url.clone(),
                 name: "file".to_string(),
-                file_path: opts["filePath"].as_str().unwrap_or("").to_string(),
+                file_path: opts.file_path.clone(),
                 form_data,
-                on_progress: None,
+                on_progress: opts.on_progress.clone(),
             }).await?;
         }
 
         Ok(UrlRes {
             base_url,
-            key: opts["key"].as_str().unwrap_or("").to_string(),
-            domain: bucket["domain"].as_str().unwrap_or("").to_string(),
-            bucket: bucket["name"].as_str().unwrap_or("").to_string(),
+            key: opts.key.clone(),
+            domain: bucket_source.domain.clone().unwrap_or_default(),
+            bucket: bucket_source.name.clone(),
         })
     }
 } 

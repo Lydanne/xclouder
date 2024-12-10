@@ -27,10 +27,10 @@ impl Strategy for Cos {
         self.native = Some(native);
     }
 
-    fn storage_key(&self, bucket: &Value) -> String {
+    fn storage_key(&self, bucket_source: &BucketSource) -> String {
         format!("sts:{}:{}", 
-            bucket["cloudName"].as_str().unwrap_or(""),
-            bucket["name"].as_str().unwrap_or("")
+            bucket_source.cloud_name.as_deref().unwrap_or(""),
+            bucket_source.name
         )
     }
 

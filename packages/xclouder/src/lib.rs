@@ -255,8 +255,8 @@ mod tests {
             self.native = Some(native);
         }
 
-        fn storage_key(&self, bucket: &Value) -> String {
-            format!("sts:mock:{}", bucket["name"].as_str().unwrap_or(""))
+        fn storage_key(&self, bucket_source: &BucketSource) -> String {
+            format!("sts:mock:{}", bucket_source.name)
         }
 
         fn domain_parser(&self, domain: &str) -> Value {

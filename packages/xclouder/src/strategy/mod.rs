@@ -1,6 +1,6 @@
 pub mod cos;
-// pub mod tos;
-// pub mod oss;
+pub mod tos;
+pub mod oss;
 
 use async_trait::async_trait;
 use serde_json::Value;
@@ -12,7 +12,7 @@ use crate::{Native, UploadOpts};
 pub trait Strategy: Send + Sync {
     fn name(&self) -> &str;
     fn load_native(&mut self, native: Box<dyn Native>);
-    fn storage_key(&self, bucket: &Value) -> String;
+    fn storage_key(&self, bucket_source: &BucketSource) -> String;
     fn domain_parser(&self, domain: &str) -> Value;
     async fn get_sts(&self, bucket_source: &BucketSource, opts: &UploadOpts<'_>) -> XResult<Value>;
     async fn upload(&self, bucket_source: &BucketSource, sts: Value, opts: &UploadOpts<'_>) -> XResult<UrlRes>;
