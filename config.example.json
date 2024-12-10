@@ -1,0 +1,189 @@
+{
+  "cloudSource": [
+      {
+          "name": "_main",
+          "buckets": [
+              {
+                  "name": "img",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "video",
+                  "fallback": "_tos"
+              },
+              {
+                  "name": "file",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "record",
+                  "fallback": "_tos2"
+              }
+          ]
+      },
+      {
+          "name": "_cos",
+          "cloud": "cos",
+          "buckets": [
+              {
+                  "name": "img",
+                  "domain": "img-bucket.cos.example.com",
+                  "cdnDomain": "img.example.com",
+                  "fallback": "_cos.backup-img"
+              },
+              {
+                  "name": "backup-img",
+                  "domain": "img.example.com",
+                  "cdnDomain": "img.example.com"
+              },
+              {
+                  "name": "video",
+                  "domain": "video-bucket.cos.example.com",
+                  "cdnDomain": "video.example.com",
+                  "fallback": "_cos.backup-video"
+              },
+              {
+                  "name": "backup-video",
+                  "domain": "video.example.com",
+                  "cdnDomain": "video.example.com",
+                  "fallback": "_tos.video"
+              },
+              {
+                  "name": "file",
+                  "domain": "file-bucket.cos.example.com",
+                  "cdnDomain": "file.example.com",
+                  "fallback": "_cos.backup-file"
+              },
+              {
+                  "name": "backup-file",
+                  "domain": "file.example.com",
+                  "cdnDomain": "file.example.com"
+              },
+              {
+                  "name": "record",
+                  "domain": "record-bucket.cos.example.com",
+                  "cdnDomain": "record.example.com",
+                  "fallback": "_cos.backup-record"
+              },
+              {
+                  "name": "backup-record",
+                  "domain": "record.example.com",
+                  "cdnDomain": "record.example.com",
+                  "fallback": "_tos.record"
+              }
+          ]
+      },
+      {
+          "name": "_tos",
+          "cloud": "tos",
+          "buckets": [
+              {
+                  "name": "img",
+                  "domain": "img.tos.example.com",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "video",
+                  "domain": "video.tos.example.com",
+                  "cdnDomain": "tos-video.example.com",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "file",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "record",
+                  "domain": "record.tos.example.com",
+                  "cdnDomain": "tos-record.example.com",
+                  "fallback": "_cos"
+              }
+          ]
+      },
+      {
+          "name": "_tos2",
+          "cloud": "tos",
+          "grayscale": 8,
+          "buckets": [
+              {
+                  "name": "img",
+                  "fallback": "_tos"
+              },
+              {
+                  "name": "video",
+                  "domain": "video2.tos.example.com",
+                  "cdnDomain": "tos2-video.example.com",
+                  "fallback": "_tos"
+              },
+              {
+                  "name": "file",
+                  "fallback": "_tos"
+              },
+              {
+                  "name": "record",
+                  "domain": "record2.tos.example.com",
+                  "cdnDomain": "tos2-record.example.com",
+                  "fallback": "_oss"
+              }
+          ]
+      },
+      {
+          "name": "_oss",
+          "cloud": "oss",
+          "grayscale": 1,
+          "buckets": [
+              {
+                  "name": "img",
+                  "domain": "img.oss.example.com",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "video",
+                  "domain": "video.oss.example.com",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "file",
+                  "domain": "file.oss.example.com",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "record",
+                  "domain": "record.oss.example.com",
+                  "fallback": "_tos"
+              },
+              {
+                  "name": "answer_img",
+                  "domain": "answer.oss.example.com",
+                  "fallback": "_cos"
+              },
+              {
+                  "name": "album",
+                  "domain": "album.oss.example.com"
+              },
+              {
+                  "name": "disk",
+                  "domain": "disk.oss.example.com"
+              }
+          ]
+      }
+  ],
+  "cloudMagics": [
+      {
+          "name": "thumbnail_200",
+          "cloudCfg": {
+              "cos": "imageMogr2/thumbnail/200>/format/jpg",
+              "oss": "x-oss-process=image/resize,w_200,h_200,m_fill/auto-orient,1/interlace,1/format,jpg",
+              "tos": ""
+          }
+      },
+      {
+          "name": "video_cover",
+          "cloudCfg": {
+              "cos": "ci-process=snapshot&time=1.5&width=200&height=200",
+              "oss": "x-oss-process=video/snapshot,t_100,f_jpg,w_200,h_200,ar_auto",
+              "tos": "x-tos-process=video/snapshot,t_1000,w_200,h_200"
+          }
+      }
+  ]
+}
